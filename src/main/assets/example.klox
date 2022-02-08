@@ -1,0 +1,6 @@
+var a = "asas";
+
+/* this
+is a comment
+*/ a
+var b;
