@@ -1,42 +1,40 @@
 import java.io.File
 import kotlin.system.exitProcess
 
-class Klox {
-    companion object {
-        var hadError = false
+object Klox {
+    var hadError = false
 
-        fun runFile(path: String) {
-            val file = File(path)
-            if (!file.exists()) {
-                println("Cannot find file: $path")
-                exitProcess(66)
-            }
-            run(file.readText())
-
-            if (hadError) exitProcess(65)
+    fun runFile(path: String) {
+        val file = File(path)
+        if (!file.exists()) {
+            println("Cannot find file: $path")
+            exitProcess(66)
         }
+        run(file.readText())
 
-        fun runPrompt() {
-            println("Klox REPL [ctrl+D to quit]")
-            while (true) {
-                print("> ")
-                val line: String = readLine() ?: break
-                run(line)
-                hadError = false
-            }
-        }
+        if (hadError) exitProcess(65)
+    }
 
-        private fun run(source: String) {
-            println(Scanner(source).scanTokens().joinToString("\n"))
+    fun runPrompt() {
+        println("Klox REPL [ctrl+D to quit]")
+        while (true) {
+            print("> ")
+            val line: String = readLine() ?: break
+            run(line)
+            hadError = false
         }
+    }
 
-        fun error(line: Int, message: String) {
-            report(line, "", message)
-        }
+    private fun run(source: String) {
+        println(Scanner(source).scanTokens().joinToString("\n"))
+    }
 
-        fun report(line: Int, where: String, message: String) {
-            System.err.println("[line $line] Error$where: $message")
-        }
+    fun error(line: Int, message: String) {
+        report(line, "", message)
+    }
+
+    fun report(line: Int, where: String, message: String) {
+        System.err.println("[line $line] Error$where: $message")
     }
 }
 
