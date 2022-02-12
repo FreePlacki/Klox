@@ -26,7 +26,15 @@ object Klox {
     }
 
     private fun run(source: String) {
-        println(Scanner(source).scanTokens().joinToString("\n"))
+        val tokens = Scanner(source).scanTokens()
+        val expression = Parser(tokens).parse()
+        if (expression == null) {
+            hadError = true
+            return
+        }
+        if (hadError) return
+
+        println(AstPrinter.print(expression))
     }
 
     fun error(line: Int, message: String) {
@@ -35,6 +43,14 @@ object Klox {
 
     fun report(line: Int, where: String, message: String) {
         System.err.println("[line $line] Error$where: $message")
+    }
+
+    fun error(token: Token, message: String) {
+        report(token.line,
+            if (token.type == TokenType.EOF) " at end"
+            else " at '${token.lexeme}'",
+            message
+        )
     }
 }
 
