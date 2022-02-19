@@ -11,7 +11,20 @@ class Parser(private val tokens: List<Token>) {
         }
     }
 
-    fun expression(): Expr = equality()
+    private fun expression(): Expr = ternary()
+
+    private fun ternary(): Expr {
+        var expr = equality()
+
+        if (match(TokenType.QUESTION_MARK)) {
+            val thenBranch = expression()
+            consume(TokenType.COLON, "Expect ':' after then branch of ternary expression.")
+            val elseBranch = ternary()
+            expr = Ternary(expr, thenBranch, elseBranch)
+        }
+
+        return expr
+    }
 
     private fun equality(): Expr {
         var expr = comparison()
@@ -82,6 +95,16 @@ class Parser(private val tokens: List<Token>) {
             val expr = expression()
             consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.")
             return Grouping(expr)
+        }
+
+        if (match(TokenType.QUESTION_MARK)) {
+            throw error(tokens[current - 1], "Missing left-hand condition of a ternary operator.")
+        }
+
+        if (match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL, TokenType.GREATER,
+                TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL,
+                TokenType.PLUS, TokenType.STRING)) {
+            throw error(tokens[current - 1], "Missing left-hand operand.")
         }
 
         throw error(tokens[current], "Expect expression.")
