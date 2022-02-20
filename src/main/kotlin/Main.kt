@@ -2,7 +2,10 @@ import java.io.File
 import kotlin.system.exitProcess
 
 object Klox {
+    private val interpreter = Interpreter()
+
     var hadError = false
+    var hadRuntimeError = false
 
     fun runFile(path: String) {
         val file = File(path)
@@ -13,6 +16,7 @@ object Klox {
         run(file.readText())
 
         if (hadError) exitProcess(65)
+        if (hadRuntimeError) exitProcess(70)
     }
 
     fun runPrompt() {
@@ -34,14 +38,14 @@ object Klox {
         }
         if (hadError) return
 
-        println(AstPrinter.print(expression))
+        interpreter.interpret(expression)
     }
 
     fun error(line: Int, message: String) {
         report(line, "", message)
     }
 
-    fun report(line: Int, where: String, message: String) {
+    private fun report(line: Int, where: String, message: String) {
         System.err.println("[line $line] Error$where: $message")
     }
 
@@ -51,6 +55,11 @@ object Klox {
             else " at '${token.lexeme}'",
             message
         )
+    }
+
+    fun runtimeError(error: RuntimeError) {
+        System.err.println("${error.message}\n[line ${error.token.line}]")
+        hadRuntimeError = true
     }
 }
 

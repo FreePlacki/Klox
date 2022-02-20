@@ -1,3 +1,5 @@
+import kotlin.math.exp
+
 object AstPrinter {
    fun print(expr: Expr): String {
        return when (expr) {
@@ -5,6 +7,7 @@ object AstPrinter {
            is Binary -> "(${expr.operator} ${print(expr.left)} ${print(expr.right)})"
            is Unary -> "(${expr.operator} ${print(expr.right)})"
            is Grouping -> "(group ${print(expr.expression)})"
+           is Ternary -> "(${expr.expression} ? ${expr.thenBranch} : ${expr.elseBranch})"
        }
    }
 }
