@@ -8,6 +8,8 @@ object AstPrinter {
            is Unary -> "(${expr.operator} ${print(expr.right)})"
            is Grouping -> "(group ${print(expr.expression)})"
            is Ternary -> "(${expr.expression} ? ${expr.thenBranch} : ${expr.elseBranch})"
+           is Variable -> "(var ${expr.name})"
+           is Assign -> "(assign ${expr.name} = ${expr.value})"
        }
    }
 }

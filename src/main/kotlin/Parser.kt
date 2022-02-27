@@ -3,15 +3,72 @@ class Parser(private val tokens: List<Token>) {
 
     private var current = 0
 
-    fun parse(): Expr? {
-        return try {
-            expression()
-        } catch (e: ParseError) {
-            null
+    fun parse(): MutableList<Stmt?> {
+        val statements = mutableListOf<Stmt?>()
+
+        while (tokens[current].type != TokenType.EOF) {
+            statements.add(declaration())
+        }
+
+        return statements
+    }
+
+    private fun declaration(): Stmt? {
+        try {
+            if (match(TokenType.VAR))
+                return varDeclaration()
+            return statement()
+        } catch (error: ParseError) {
+            synchronize()
+            return null
         }
     }
 
-    private fun expression(): Expr = ternary()
+    private fun statement(): Stmt {
+        if (match(TokenType.PRINT))
+            return printStatement()
+        return expressionStatement()
+    }
+
+    private fun varDeclaration(): Stmt {
+        val name = consume(TokenType.IDENTIFIER, "Expect variable name.")
+        val initializer = if (match(TokenType.EQUAL)) expression() else null
+
+        consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.")
+
+        return Var(name, initializer)
+    }
+
+    private fun printStatement(): Stmt {
+        val expr = expression()
+        consume(TokenType.SEMICOLON, "Expect ';' after value.")
+        return Print(expr)
+    }
+
+    private fun expressionStatement(): Stmt {
+        val expr = expression()
+        consume(TokenType.SEMICOLON, "Expect ';' after value.")
+        return Expression(expr)
+    }
+
+    private fun expression(): Expr = assignment()
+
+    private fun assignment(): Expr {
+        val expr = ternary()
+
+        if (match(TokenType.EQUAL)) {
+            val equals = tokens[current - 1]
+            val value = assignment()
+
+            if (expr is Variable) {
+                return Assign(expr.name, value)
+            }
+
+            error(equals, "Invalid assignment target.");
+        }
+
+        return expr
+    }
 
     private fun ternary(): Expr {
         var expr = equality()
@@ -105,6 +162,10 @@ class Parser(private val tokens: List<Token>) {
                 TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL,
                 TokenType.PLUS, TokenType.STRING)) {
             throw error(tokens[current - 1], "Missing left-hand operand.")
+        }
+
+        if (match(TokenType.IDENTIFIER)) {
+            return Variable(tokens[current - 1])
         }
 
         throw error(tokens[current], "Expect expression.")

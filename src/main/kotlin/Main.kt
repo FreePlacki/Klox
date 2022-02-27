@@ -31,14 +31,14 @@ object Klox {
 
     private fun run(source: String) {
         val tokens = Scanner(source).scanTokens()
-        val expression = Parser(tokens).parse()
-        if (expression == null) {
+        val statements = Parser(tokens).parse()
+        if (statements.isEmpty()) {
             hadError = true
             return
         }
         if (hadError) return
 
-        interpreter.interpret(expression)
+        interpreter.interpret(statements)
     }
 
     fun error(line: Int, message: String) {
@@ -58,7 +58,7 @@ object Klox {
     }
 
     fun runtimeError(error: RuntimeError) {
-        System.err.println("${error.message}\n[line ${error.token.line}]")
+        System.err.println("[line ${error.token.line}] ${error.message}")
         hadRuntimeError = true
     }
 }

@@ -1,13 +1,37 @@
 class Interpreter {
-    fun interpret(expr: Expr) {
+    private val environment = Environment()
+
+    fun interpret(statements: MutableList<Stmt?>) {
         try {
-            val value = evaluate(expr)
-            println(stringify(value))
+            for (stmt in statements)
+                execute(stmt)
         } catch (error: RuntimeError) {
             Klox.runtimeError(error)
         }
     }
 
+    private fun execute(statement: Stmt?) {
+        when (statement) {
+            is Print      -> execPrint(statement)
+            is Expression -> execExpression(statement)
+            is Var        -> execVariable(statement)
+            null -> return
+        }
+    }
+
+    private fun execExpression(stmt: Expression) {
+        evaluate(stmt.expression)
+    }
+
+    private fun execPrint(stmt: Print) {
+        val value = evaluate(stmt.expression)
+        println(stringify(value))
+    }
+
+    private fun execVariable(stmt: Var) {
+        val value = if (stmt.initializer != null) evaluate(stmt.initializer) else null
+        environment.define(stmt.name.lexeme, value)
+    }
 
     private fun evaluate(expr: Expr): Any? {
         return when (expr) {
@@ -16,18 +40,20 @@ class Interpreter {
             is Binary   -> evalBinary(expr)
             is Grouping -> evalGrouping(expr)
             is Ternary  -> evalTernary(expr)
+            is Variable -> evalVariable(expr)
+            is Assign   -> evalAssign(expr)
         }
     }
 
-    fun evalLiteral(expr: Literal): Any? {
+    private fun evalLiteral(expr: Literal): Any? {
         return expr.value
     }
 
-    fun evalGrouping(expr: Grouping): Any? {
+    private fun evalGrouping(expr: Grouping): Any? {
         return evaluate(expr.expression)
     }
 
-    fun evalUnary(expr: Unary): Any? {
+    private fun evalUnary(expr: Unary): Any? {
         val right = evaluate(expr.right)
 
         return when (expr.operator.type) {
@@ -38,6 +64,16 @@ class Interpreter {
             }
             else            -> "Not implemented"
         }
+    }
+
+    private fun evalVariable(expr: Variable): Any? {
+        return environment.get(expr.name)
+    }
+
+    private fun evalAssign(expr: Assign): Any? {
+        val value = evaluate(expr.value)
+        environment.assign(expr.name, value)
+        return value
     }
 
     private fun checkNumberOperand(operator: Token, operand: Any?) {
@@ -58,7 +94,7 @@ class Interpreter {
         }
     }
 
-    fun evalBinary(expr: Binary): Any? {
+    private fun evalBinary(expr: Binary): Any? {
         val left =  evaluate(expr.left)
         val right = evaluate(expr.right)
 
@@ -114,7 +150,7 @@ class Interpreter {
         }
     }
 
-    fun evalTernary(expr: Ternary): Any? {
+    private fun evalTernary(expr: Ternary): Any? {
         val condition = evaluate(expr.expression)
 
         if (condition as Boolean)
