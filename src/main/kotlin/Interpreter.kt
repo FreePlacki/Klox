@@ -1,10 +1,16 @@
 class Interpreter {
-    private val environment = Environment()
+    private var environment = Environment()
+    private class BreakJump: RuntimeException()
+    private class ContinueJump: RuntimeException()
 
-    fun interpret(statements: MutableList<Stmt?>) {
+    fun interpret(statements: MutableList<Stmt?>, isRepl: Boolean = false) {
         try {
-            for (stmt in statements)
+            for (stmt in statements) {
+                if (isRepl && stmt is Expression) {
+                    println(stringify(evaluate(stmt.expression)))
+                }
                 execute(stmt)
+            }
         } catch (error: RuntimeError) {
             Klox.runtimeError(error)
         }
@@ -15,12 +21,42 @@ class Interpreter {
             is Print      -> execPrint(statement)
             is Expression -> execExpression(statement)
             is Var        -> execVariable(statement)
+            is Block      -> execBlock(statement.statements, Environment(environment))
+            is If         -> execIf(statement)
+            is While      -> execWhile(statement)
+            is Break      -> execBreak()
+            is Continue   -> execContinue()
             null -> return
         }
     }
 
     private fun execExpression(stmt: Expression) {
         evaluate(stmt.expression)
+    }
+
+    private fun execIf(stmt: If) {
+        if (isTruthy(evaluate(stmt.condition)))
+            execute(stmt.thenBranch)
+        else if (stmt.elseBranch != null)
+            execute(stmt.elseBranch)
+    }
+
+    private fun execWhile(stmt: While) {
+        while (isTruthy(evaluate(stmt.condition))) {
+            try {
+                execute(stmt.body)
+            } catch (_: BreakJump) {
+                break
+            } catch (_: ContinueJump) {}
+        }
+    }
+
+    private fun execBreak() {
+        throw BreakJump()
+    }
+
+    private fun execContinue() {
+        throw ContinueJump()
     }
 
     private fun execPrint(stmt: Print) {
@@ -33,6 +69,17 @@ class Interpreter {
         environment.define(stmt.name.lexeme, value)
     }
 
+    private fun execBlock(statements: List<Stmt?>, environment: Environment) {
+        val previous = this.environment
+        try {
+            this.environment = environment
+            for (stmt in statements)
+                execute(stmt)
+        } finally { // we want to restore this.environment even in case of an error
+            this.environment = previous
+        }
+    }
+
     private fun evaluate(expr: Expr): Any? {
         return when (expr) {
             is Literal  -> evalLiteral(expr)
@@ -42,6 +89,7 @@ class Interpreter {
             is Ternary  -> evalTernary(expr)
             is Variable -> evalVariable(expr)
             is Assign   -> evalAssign(expr)
+            is Logical  -> evalLogical(expr)
         }
     }
 
@@ -74,6 +122,17 @@ class Interpreter {
         val value = evaluate(expr.value)
         environment.assign(expr.name, value)
         return value
+    }
+
+    private fun evalLogical(expr: Logical): Any? {
+        val left = evaluate(expr.left)
+
+        if (expr.operator.type == TokenType.OR)
+            if (isTruthy(left)) return left
+        else
+            if (!isTruthy(left)) return left
+
+        return evaluate(expr.right)
     }
 
     private fun checkNumberOperand(operator: Token, operand: Any?) {

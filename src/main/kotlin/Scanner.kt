@@ -4,23 +4,25 @@ class Scanner(private val source: String) {
     private var current = 0
     private var line = 0
 
-    val keywords = mapOf(
-        "and"    to TokenType.AND,
-        "class"  to TokenType.CLASS,
-        "else"   to TokenType.ELSE,
-        "false"  to TokenType.FALSE,
-        "for"    to TokenType.FOR,
-        "fun"    to TokenType.FUN,
-        "if"     to TokenType.IF,
-        "nil"    to TokenType.NIL,
-        "or"     to TokenType.OR,
-        "print"  to TokenType.PRINT,
-        "return" to TokenType.RETURN,
-        "super"  to TokenType.SUPER,
-        "this"   to TokenType.THIS,
-        "true"   to TokenType.TRUE,
-        "var"    to TokenType.VAR,
-        "while"  to TokenType.WHILE
+    private val keywords = mapOf(
+        "and"      to TokenType.AND,
+        "class"    to TokenType.CLASS,
+        "else"     to TokenType.ELSE,
+        "false"    to TokenType.FALSE,
+        "for"      to TokenType.FOR,
+        "fun"      to TokenType.FUN,
+        "if"       to TokenType.IF,
+        "nil"      to TokenType.NIL,
+        "or"       to TokenType.OR,
+        "print"    to TokenType.PRINT,
+        "return"   to TokenType.RETURN,
+        "super"    to TokenType.SUPER,
+        "this"     to TokenType.THIS,
+        "true"     to TokenType.TRUE,
+        "var"      to TokenType.VAR,
+        "while"    to TokenType.WHILE,
+        "break"    to TokenType.BREAK,
+        "continue" to TokenType.CONTINUE
     )
 
     fun scanTokens(): MutableList<Token> {

@@ -1,5 +1,3 @@
-import kotlin.math.exp
-
 object AstPrinter {
    fun print(expr: Expr): String {
        return when (expr) {
@@ -10,6 +8,7 @@ object AstPrinter {
            is Ternary -> "(${expr.expression} ? ${expr.thenBranch} : ${expr.elseBranch})"
            is Variable -> "(var ${expr.name})"
            is Assign -> "(assign ${expr.name} = ${expr.value})"
+           is Logical -> "(${expr.left} ${expr.operator} ${expr.right})"
        }
    }
 }

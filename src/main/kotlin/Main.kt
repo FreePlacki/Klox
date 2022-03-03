@@ -24,12 +24,12 @@ object Klox {
         while (true) {
             print("> ")
             val line: String = readLine() ?: break
-            run(line)
+            run(line, true)
             hadError = false
         }
     }
 
-    private fun run(source: String) {
+    private fun run(source: String, isRepl: Boolean = false) {
         val tokens = Scanner(source).scanTokens()
         val statements = Parser(tokens).parse()
         if (statements.isEmpty()) {
@@ -38,7 +38,7 @@ object Klox {
         }
         if (hadError) return
 
-        interpreter.interpret(statements)
+        interpreter.interpret(statements, isRepl)
     }
 
     fun error(line: Int, message: String) {
