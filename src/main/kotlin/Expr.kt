@@ -8,3 +8,4 @@ class Ternary(val expression: Expr, val thenBranch: Expr, val elseBranch: Expr):
 class Grouping(val expression: Expr): Expr()
 class Variable(val name: Token): Expr()
 class Assign(val name: Token, val value: Expr): Expr()
+class Call(val callee: Expr, val paren: Token, val arguments: List<Expr>): Expr()

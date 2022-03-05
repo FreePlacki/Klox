@@ -1,0 +1,1 @@
+class ReturnExc(val value: Any?): RuntimeException()

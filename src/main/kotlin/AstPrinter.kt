@@ -9,6 +9,7 @@ object AstPrinter {
            is Variable -> "(var ${expr.name})"
            is Assign -> "(assign ${expr.name} = ${expr.value})"
            is Logical -> "(${expr.left} ${expr.operator} ${expr.right})"
+           is Call -> "(call ${expr.callee} (${expr.arguments}))"
        }
    }
 }

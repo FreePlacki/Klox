@@ -1,7 +1,17 @@
 class Interpreter {
-    private var environment = Environment()
+    val globals = Environment()
+    private var environment = globals
     private class BreakJump: RuntimeException()
     private class ContinueJump: RuntimeException()
+
+    init {
+        class Clock: KloxCallable {
+            override fun arity() = 0
+            override fun call(interpreter: Interpreter, arguments: List<Any?>) = System.currentTimeMillis() / 1000.0
+            override fun toString() = "<native fn>"
+        }
+        globals.define("clock", Clock())
+    }
 
     fun interpret(statements: MutableList<Stmt?>, isRepl: Boolean = false) {
         try {
@@ -20,18 +30,25 @@ class Interpreter {
         when (statement) {
             is Print      -> execPrint(statement)
             is Expression -> execExpression(statement)
+            is Function   -> execFunction(statement)
             is Var        -> execVariable(statement)
             is Block      -> execBlock(statement.statements, Environment(environment))
             is If         -> execIf(statement)
             is While      -> execWhile(statement)
             is Break      -> execBreak()
             is Continue   -> execContinue()
+            is Return     -> execReturn(statement)
             null -> return
         }
     }
 
     private fun execExpression(stmt: Expression) {
         evaluate(stmt.expression)
+    }
+
+    private fun execFunction(stmt: Function) {
+        val function = KloxFunction(stmt, environment)
+        environment.define(stmt.name.lexeme, function)
     }
 
     private fun execIf(stmt: If) {
@@ -69,7 +86,7 @@ class Interpreter {
         environment.define(stmt.name.lexeme, value)
     }
 
-    private fun execBlock(statements: List<Stmt?>, environment: Environment) {
+    fun execBlock(statements: List<Stmt?>, environment: Environment) {
         val previous = this.environment
         try {
             this.environment = environment
@@ -78,6 +95,12 @@ class Interpreter {
         } finally { // we want to restore this.environment even in case of an error
             this.environment = previous
         }
+    }
+
+    private fun execReturn(stmt: Return) {
+        val value = if (stmt.expression != null) evaluate(stmt.expression) else null
+
+        throw ReturnExc(value)
     }
 
     private fun evaluate(expr: Expr): Any? {
@@ -90,6 +113,7 @@ class Interpreter {
             is Variable -> evalVariable(expr)
             is Assign   -> evalAssign(expr)
             is Logical  -> evalLogical(expr)
+            is Call     -> evalCall(expr)
         }
     }
 
@@ -133,6 +157,18 @@ class Interpreter {
             if (!isTruthy(left)) return left
 
         return evaluate(expr.right)
+    }
+
+    private fun evalCall(expr: Call): Any? {
+        val callee = evaluate(expr.callee)
+        val arguments = expr.arguments.map { evaluate(it) }
+
+        if (callee !is KloxCallable)
+            throw RuntimeError(expr.paren, "Can only call functions and classes.")
+        if (arguments.size != callee.arity())
+            throw RuntimeError(expr.paren, "Expected ${callee.arity()} arguments but got ${arguments.size}.")
+
+        return callee.call(this, arguments)
     }
 
     private fun checkNumberOperand(operator: Token, operand: Any?) {

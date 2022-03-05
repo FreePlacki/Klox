@@ -1,14 +1,21 @@
 program        -> declaration* EOF ;
 
-declaration    -> varDecl | statement ;
+declaration    -> varDecl | funDecl | statement ;
 
 varDecl        -> "var" IDENTIFIER ( "=" expression )? ";" ;
+
+funDecl        -> "fun" function
+
+function       -> IDENTIFIER "(" parameters? ")" block ;
+
+parameters     -> IDENTIFIER ("," IDENTIFIER )* ;
 
 statement      -> exprStmt
                 | ifStmt
                 | whileStmt
                 | forStmt
                 | printStmt
+                | returnStmt
                 | block;
 
 exprStmt       -> expression ";" ;
@@ -24,6 +31,8 @@ forStmt        -> "for" "(" varDecl | exprStmt ";"
                         ")" statement ;
 
 printStmt      -> "print" expression ";" ;
+
+returnStmt     -> "return" expression? ";" ;
 
 block          -> "{" declaration* "}" ;
 
@@ -46,7 +55,11 @@ term           -> factor ( ( "-" | "+" ) factor )* ;
 factor         -> unary ( ( "/" | "*" ) unary )* ;
 
 unary          -> ( "!" | "-" ) unary
-               | primary ;
+               | call ;
+
+call           -> primary ( arguments? )* ;
+
+arguments      -> expression ( "," expression )* ;
 
 primary        -> NUMBER | STRING | "true" | "false" | "nil"
                | "(" expression ")"
