@@ -123,8 +123,12 @@ class Parser(private val tokens: List<Token>) {
 
     private fun function(kind: String): Stmt {
         val name = consume(TokenType.IDENTIFIER, "Expect $kind name.")
-        consume(TokenType.LEFT_PAREN, "Expect '(' after $kind name.")
 
+        return Function(name, functionBody("function"))
+    }
+
+    private fun functionBody(kind: String): FunctionBody {
+        consume(TokenType.LEFT_PAREN, "Expect '(' after $kind name.")
         val parameters = mutableListOf<Token>()
         if (tokens[current].type != TokenType.RIGHT_PAREN) {
             do {
@@ -138,7 +142,8 @@ class Parser(private val tokens: List<Token>) {
 
         consume(TokenType.LEFT_BRACE, "Expect '{' before $kind body.")
         val body = block()
-        return Function(name, parameters, body)
+
+        return FunctionBody(parameters, body)
     }
 
     private fun printStatement(): Stmt {
@@ -340,6 +345,11 @@ class Parser(private val tokens: List<Token>) {
 
         if (match(TokenType.IDENTIFIER)) {
             return Variable(tokens[current - 1])
+        }
+
+        if (tokens[current].type == TokenType.FUN && tokens[current + 1].type != TokenType.IDENTIFIER) {
+            advance()
+            return functionBody("function")
         }
 
         throw error(tokens[current], "Expect expression.")

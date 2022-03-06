@@ -48,7 +48,7 @@ class Interpreter {
 
     private fun execFunction(stmt: Function) {
         val function = KloxFunction(stmt, environment)
-        environment.define(stmt.name.lexeme, function)
+        environment.define(stmt.name!!.lexeme, function)
     }
 
     private fun execIf(stmt: If) {
@@ -83,7 +83,10 @@ class Interpreter {
 
     private fun execVariable(stmt: Var) {
         val value = if (stmt.initializer != null) evaluate(stmt.initializer) else null
-        environment.define(stmt.name.lexeme, value)
+        if (value is Function)
+            environment.define(stmt.name.lexeme, KloxFunction(value, environment))
+        else
+            environment.define(stmt.name.lexeme, value)
     }
 
     fun execBlock(statements: List<Stmt?>, environment: Environment) {
@@ -114,6 +117,7 @@ class Interpreter {
             is Assign   -> evalAssign(expr)
             is Logical  -> evalLogical(expr)
             is Call     -> evalCall(expr)
+            is FunctionBody -> evalFuncBody(expr)
         }
     }
 
@@ -169,6 +173,10 @@ class Interpreter {
             throw RuntimeError(expr.paren, "Expected ${callee.arity()} arguments but got ${arguments.size}.")
 
         return callee.call(this, arguments)
+    }
+
+    private fun evalFuncBody(expr: FunctionBody): Any? {
+        return Function(null, expr)
     }
 
     private fun checkNumberOperand(operator: Token, operand: Any?) {

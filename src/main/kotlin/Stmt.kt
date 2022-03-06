@@ -1,7 +1,7 @@
 sealed class Stmt
 
 class Expression(val expression: Expr): Stmt()
-class Function(val name: Token, val params: List<Token>, val body: List<Stmt?>): Stmt()
+class Function(val name: Token?, val funBody: FunctionBody): Stmt()
 class If(val condition: Expr, val thenBranch: Stmt, val elseBranch: Stmt?): Stmt()
 class While(val condition: Expr, val body: Stmt): Stmt()
 object Break: Stmt()

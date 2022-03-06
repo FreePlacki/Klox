@@ -46,7 +46,7 @@ object Klox {
     }
 
     private fun report(line: Int, where: String, message: String) {
-        System.err.println("[line $line] Error$where: $message")
+        System.err.println("[line ${line + 1}] Error$where: $message")
     }
 
     fun error(token: Token, message: String) {
@@ -58,7 +58,7 @@ object Klox {
     }
 
     fun runtimeError(error: RuntimeError) {
-        System.err.println("[line ${error.token.line}] ${error.message}")
+        System.err.println("[line ${error.token.line + 1}] ${error.message}")
         hadRuntimeError = true
     }
 }
