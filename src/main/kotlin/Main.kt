@@ -4,8 +4,8 @@ import kotlin.system.exitProcess
 object Klox {
     private val interpreter = Interpreter()
 
-    var hadError = false
-    var hadRuntimeError = false
+    private var hadError = false
+    private var hadRuntimeError = false
 
     fun runFile(path: String) {
         val file = File(path)
@@ -36,6 +36,10 @@ object Klox {
             hadError = true
             return
         }
+        if (hadError) return
+
+        val resolver = Resolver(interpreter)
+        resolver.resolve(statements)
         if (hadError) return
 
         interpreter.interpret(statements, isRepl)

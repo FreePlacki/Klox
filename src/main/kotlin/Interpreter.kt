@@ -1,5 +1,6 @@
 class Interpreter {
-    val globals = Environment()
+    private val globals = Environment()
+    private val locals = mutableMapOf<Expr, Int>()
     private var environment = globals
     private class BreakJump: RuntimeException()
     private class ContinueJump: RuntimeException()
@@ -24,6 +25,10 @@ class Interpreter {
         } catch (error: RuntimeError) {
             Klox.runtimeError(error)
         }
+    }
+
+    fun resolve(expr: Expr, depth: Int) {
+        locals[expr] = depth
     }
 
     private fun execute(statement: Stmt?) {
@@ -143,12 +148,25 @@ class Interpreter {
     }
 
     private fun evalVariable(expr: Variable): Any? {
-        return environment.get(expr.name)
+        return lookUpVariable(expr.name, expr)
+    }
+
+    private fun lookUpVariable(name: Token, expr: Expr): Any? {
+        val distance = locals[expr]
+        if (distance != null)
+            return environment.getAt(distance, name.lexeme)
+        return globals.get(name)
     }
 
     private fun evalAssign(expr: Assign): Any? {
         val value = evaluate(expr.value)
-        environment.assign(expr.name, value)
+
+        val distance = locals[expr]
+        if (distance != null)
+            environment.assignAt(distance, expr.name, value)
+        else
+            environment.assign(expr.name, value)
+
         return value
     }
 

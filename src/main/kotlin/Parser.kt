@@ -102,14 +102,14 @@ class Parser(private val tokens: List<Token>) {
         if (loopLevel < 1)
             throw error(tokens[current - 1], "'break' only allowed inside a loop.")
         consume(TokenType.SEMICOLON, "Expect ';' after 'break' statement.")
-        return Break
+        return Break(tokens[current - 2])
     }
 
     private fun continueStatement(): Stmt {
         if (loopLevel < 1)
             throw error(tokens[current - 1], "'continue' only allowed inside a loop.")
         consume(TokenType.SEMICOLON, "Expect ';' after 'continue' statement.")
-        return Continue
+        return Continue(tokens[current - 2])
     }
 
     private fun varDeclaration(): Stmt {
